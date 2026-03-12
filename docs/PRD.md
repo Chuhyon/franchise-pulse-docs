@@ -1,94 +1,97 @@
 # PRD: Franchise Pulse Korea (v1.0)
 
-## 1. Product Summary
+## 1. 제품 요약
 
-- Product: monthly franchise opening/closure Top 100 dashboard
-- Primary users: prospective founders, analysts, operators, media/research users
-- Deployment target: Vercel (public web)
-- Data strategy: use all available government public data sources, with migration-safe design
+- 제품: 월별 프랜차이즈 개업/폐업 Top 100 대시보드
+- 주요 사용자: 예비 창업자, 데이터 분석가, 운영 담당자, 미디어/리서치 사용자
+- 배포 목표: Vercel 기반 공개 웹 서비스
+- 데이터 전략: 정부 공공데이터를 최대한 통합 활용하고, 포털 전환에도 운영이 지속되도록 설계
 
-## 2. Problem
+## 2. 문제 정의
 
-- Franchise opening/closure data is fragmented across portals and formats.
-- Users cannot easily compare monthly brand-level opening and closure trends.
-- LOCALDATA portal sunset requires continuity planning.
+- 프랜차이즈 개업/폐업 데이터가 포털과 형식별로 분산되어 있음
+- 사용자가 월 단위 브랜드 증감 흐름을 한눈에 비교하기 어려움
+- LOCALDATA 종료에 따른 데이터 연속성 확보가 필요함
 
-## 3. Goals
+## 3. 제품 목표
 
-- Provide monthly `Open Top 100` and `Close Top 100` rankings.
-- Enable filtering by month, region, business category, and brand.
-- Publish transparent data lineage and refresh timestamps.
-- Maintain service continuity before/after LOCALDATA sunset.
+- 월별 `개업 Top 100` 및 `폐업 Top 100` 랭킹 제공
+- 월/지역/업종/브랜드 기준 필터링 제공
+- 데이터 출처, 갱신 시각, 산정 기준을 투명하게 공개
+- LOCALDATA 종료 전후에도 동일한 사용자 경험 유지
 
-## 4. Data Sources (All-In)
+## 4. 데이터 소스 전략 (All-In)
 
-- LOCALDATA (`localdata.go.kr`) for historical structure and legacy access.
-- Public Data Portal (`data.go.kr`) as primary source after integration.
-- KFTC franchise APIs on `data.go.kr` (brand/franchise metadata and statistics).
-- Optional local government open data portals for fallback/coverage gap handling.
+- LOCALDATA (`localdata.go.kr`): 과거 구조 및 전환기 데이터
+- 공공데이터포털 (`data.go.kr`): 통합 이후의 1차 기본 소스
+- 공정거래위원회 가맹정보 API (`data.go.kr`): 브랜드/가맹 메타데이터 보강
+- 지자체 오픈데이터 포털: 공백/지연 구간 보완용 선택 소스
 
-### Migration decision
+### 마이그레이션 원칙
 
-- `data.go.kr` is the long-term primary source.
-- `localdata.go.kr` is treated as transition source until shutdown window.
+- 장기 기본 소스는 `data.go.kr`로 고정
+- `localdata.go.kr`는 종료 전환 기간 동안 보조 소스로 운영
 
-## 5. In Scope
+## 5. 범위 (In Scope)
 
-- Dashboard: monthly open/close Top 100
-- Filters: month, region, category, brand search
-- Brand detail: monthly trend and net change
-- CSV export for current filtered view
-- Source and quality badges (last sync, source confidence)
+- 대시보드: 월별 개업/폐업 Top 100
+- 필터: 월, 지역, 업종, 브랜드 검색
+- 브랜드 상세: 월별 추이 및 순증감
+- CSV 내보내기: 현재 필터 결과 기준
+- 품질 표시: 마지막 동기화 시각, 소스 신뢰도 배지
 
-## 6. Out of Scope (v1)
+## 6. 제외 범위 (Out of Scope, v1)
 
-- User accounts/subscriptions
-- Real-time minute-level ingestion
-- Predictive modeling and recommendation engine
+- 사용자 계정/구독 기능
+- 분 단위 실시간 수집
+- 예측 모델/추천 엔진
 
-## 7. Success Metrics
+## 7. 성공 지표
 
-- Data freshness: daily refresh success >= 95%
-- Pipeline reliability: scheduled job success >= 99%
-- User utility: filter usage rate >= 40% sessions
-- Accuracy: sampled reconciliation error < 1%
-- Availability: public dashboard uptime >= 99.0%
+- 데이터 최신성: 일 단위 갱신 성공률 95% 이상
+- 파이프라인 신뢰성: 스케줄 작업 성공률 99% 이상
+- 사용자 효용성: 필터 사용 세션 비율 40% 이상
+- 정확성: 샘플 대사 검증 오차 1% 미만
+- 가용성: 퍼블릭 대시보드 월 가용성 99.0% 이상
 
-## 7.1 Governance baseline
+## 7.1 거버넌스 기준
 
-- Licensing/attribution requirements from each source must be stored and shown in `about-data`.
-- PII policy: only public business data is ingested; no user personal data collection in v1.
-- Retention: raw ingest logs 90 days, normalized events 24 months minimum, aggregated monthly metrics retained indefinitely.
+- 소스별 라이선스/출처 표기 요구사항을 수집하고 `about-data` 페이지에 명시
+- 개인정보 정책: v1에서 사용자 개인정보 미수집, 공개 사업장 데이터만 활용
+- 보관 정책:
+  - 원천 수집 로그: 90일
+  - 정규화 이벤트: 최소 24개월
+  - 월 집계 데이터: 장기 추세 분석 목적 상시 보관
 
-## 8. Risks and Mitigations
+## 8. 리스크 및 대응
 
-- API schema changes -> source adapters + schema validation + alerts
-- Brand matching ambiguity -> confidence scoring + manual override table
-- Rate limits/outages -> retry/backoff + cache snapshots + fallback source
-- Portal migration changes -> adapter abstraction and cutover runbook
+- API 스키마 변경 -> 소스 어댑터 분리 + 스키마 검증 + 경보
+- 브랜드 매칭 모호성 -> 신뢰도 점수 + 수동 보정 테이블
+- 호출 제한/장애 -> 재시도/백오프 + 캐시 스냅샷 + 대체 소스
+- 포털 정책 변경 -> 어댑터 추상화 + 전환 런북
 
-## 8.1 Migration and continuity policy
+## 8.1 전환/연속성 정책
 
-- Initial backfill from available historical files/snapshots before public launch.
-- Incremental refresh target: daily at least once; retry windows for transient source failures.
-- Source fallback order: `data.go.kr` -> `KFTC supplemental` -> `legacy/local backup` where applicable.
-- Kill switch: disable failing source adapter without stopping dashboard serving from last good aggregates.
+- 공개 전 과거 파일/스냅샷 기반 초기 백필 수행
+- 일 최소 1회 증분 갱신, 장애 시 재시도 윈도우 운영
+- 소스 우선순위: `data.go.kr` -> `KFTC 보강` -> `legacy/local backup`
+- 킬 스위치: 특정 어댑터 장애 시 해당 소스만 비활성화하고 마지막 정상 집계 제공
 
-## 9. Release Plan
+## 9. 릴리스 계획
 
-- Phase 1: source onboarding + historical backfill
-- Phase 2: monthly aggregation + ranking service
-- Phase 3: dashboard UI + export
-- Phase 4: reliability hardening + observability + public launch
+- 1단계: 소스 연동 및 과거 데이터 백필
+- 2단계: 월 집계 및 랭킹 API 구축
+- 3단계: 대시보드 UI 및 CSV 내보내기
+- 4단계: 안정화/모니터링 강화 후 공개 배포
 
-## 9.1 Launch gates
+## 9.1 런치 게이트
 
-- Freshness SLA validated (latest successful sync <= 24h for daily sources)
-- Accuracy check completed against sampled source records
-- Public API error contract and CORS policy locked
-- Incident runbook and rollback process tested once in staging
+- 최신성 SLA 검증 완료 (일 단위 소스 기준 마지막 정상 동기화 24시간 이내)
+- 정확성 샘플 대사 검증 완료
+- 공개 API 에러 규약/CORS 정책 고정
+- 스테이징에서 장애 대응/롤백 런북 1회 이상 점검 완료
 
-## 10. Document boundary
+## 10. 문서 경계
 
-- This PRD stays concise by design.
-- Detailed feature behavior, data model, API contract, and UI wireframes are in `docs/FRD.md`.
+- PRD는 의사결정과 범위 정의 중심으로 간결하게 유지
+- 기능 동작, 데이터 모델, API 계약, 와이어프레임, 운영 상세는 `docs/FRD.md`에서 관리
