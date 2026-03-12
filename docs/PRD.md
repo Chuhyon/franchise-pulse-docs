@@ -52,6 +52,13 @@
 - Pipeline reliability: scheduled job success >= 99%
 - User utility: filter usage rate >= 40% sessions
 - Accuracy: sampled reconciliation error < 1%
+- Availability: public dashboard uptime >= 99.0%
+
+## 7.1 Governance baseline
+
+- Licensing/attribution requirements from each source must be stored and shown in `about-data`.
+- PII policy: only public business data is ingested; no user personal data collection in v1.
+- Retention: raw ingest logs 90 days, normalized events 24 months minimum, aggregated monthly metrics retained indefinitely.
 
 ## 8. Risks and Mitigations
 
@@ -60,12 +67,26 @@
 - Rate limits/outages -> retry/backoff + cache snapshots + fallback source
 - Portal migration changes -> adapter abstraction and cutover runbook
 
+## 8.1 Migration and continuity policy
+
+- Initial backfill from available historical files/snapshots before public launch.
+- Incremental refresh target: daily at least once; retry windows for transient source failures.
+- Source fallback order: `data.go.kr` -> `KFTC supplemental` -> `legacy/local backup` where applicable.
+- Kill switch: disable failing source adapter without stopping dashboard serving from last good aggregates.
+
 ## 9. Release Plan
 
 - Phase 1: source onboarding + historical backfill
 - Phase 2: monthly aggregation + ranking service
 - Phase 3: dashboard UI + export
 - Phase 4: reliability hardening + observability + public launch
+
+## 9.1 Launch gates
+
+- Freshness SLA validated (latest successful sync <= 24h for daily sources)
+- Accuracy check completed against sampled source records
+- Public API error contract and CORS policy locked
+- Incident runbook and rollback process tested once in staging
 
 ## 10. Document boundary
 

@@ -119,6 +119,12 @@ match_confidence              # 0.0 - 1.0
 - Secondary recovery run: 05:30 KST
 - Manual re-run endpoint for operations
 
+## 5.3 Failure policy
+
+- Retry policy: 3 attempts with exponential backoff (1m, 5m, 15m)
+- On repeated failure: mark adapter degraded and keep serving last successful aggregate snapshot
+- Dead-letter records are quarantined in `ops_data_quality_issue` for reprocessing
+
 ## 6. Storage Design (PostgreSQL)
 
 ## 6.1 Table list
@@ -190,6 +196,26 @@ create table if not exists agg_monthly_brand_metric (
 ## 7. API Contract (Internal BFF)
 
 Base path: `/api/v1`
+
+## 7.0 Versioning, limits, and CORS
+
+- Versioning: URI versioning (`/api/v1`) with additive changes only in minor releases
+- Rate limit: 60 req/min per IP for public read endpoints
+- CORS: allow only dashboard origin(s) in production
+- Cache headers: `s-maxage=300, stale-while-revalidate=600` for ranking endpoints
+
+### Error envelope
+
+```json
+{
+  "error": {
+    "code": "SOURCE_TIMEOUT",
+    "message": "Upstream source timed out",
+    "requestId": "req_123",
+    "retryable": true
+  }
+}
+```
 
 ## 7.1 GET /rankings
 
@@ -285,12 +311,22 @@ Protected endpoint for monthly re-aggregation by month range.
 - Rate-limit internal API endpoints
 - Store operational audit logs for pipeline actions
 - Respect each source license and attribution requirement
+- Data retention policy:
+  - raw ingestion metadata: 90 days
+  - normalized events: 24 months minimum
+  - monthly aggregates: retained for long-term trend analysis
 
 ## 11. Observability
 
 - Metrics: ingestion success rate, source latency, row delta, API p95
 - Logs: ingestion run logs, parse failures, match confidence distributions
 - Alerts: scheduler failures, zero-ingestion anomalies, schema drift
+
+## 11.1 SLO targets
+
+- API availability SLO: 99.0% monthly
+- Ranking API p95 latency: <= 800ms (cache hit)
+- Data freshness SLO: daily sources reflected within 24h
 
 ## 12. Acceptance Criteria
 
@@ -299,6 +335,15 @@ Protected endpoint for monthly re-aggregation by month range.
 - AC-03: Region and industry filters produce deterministic ranking output.
 - AC-04: CSV export equals visible filtered table ordering.
 - AC-05: Source health page reflects last successful sync for each adapter.
+- AC-06: Sampled reconciliation against source data shows <1% monthly count error.
+- AC-07: If one source adapter fails, dashboard still serves last good aggregates with degraded badge.
+
+## 12.1 Data quality validation checks
+
+- Duplicate check: unique by source key and source update timestamp
+- Null check: required dimensions (`event_date`, `event_type`, `source_record_id`) must exist
+- Range check: event dates cannot be in impossible future windows
+- Classification check: status mapping coverage monitored; unknown status ratio alert > 2%
 
 ## 13. Open Decisions (Tracked)
 
