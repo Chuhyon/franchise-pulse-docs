@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Franchise Pulse Korea - Web Test</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Franchise Pulse Korea</p>
+          <h1>월별 개업/폐업 Top 100 웹 테스트 버전</h1>
+          <p class="subtitle">
+            PRD/FRD 기준의 필수 화면 흐름을 빠르게 검증하기 위한 테스트 대시보드입니다.
+          </p>
+          <p class="subtitle"><a href="/about-data">데이터 기준 보기 (/about-data)</a></p>
+        </div>
+        <div class="status-panel">
+          <p><span>Data Freshness</span><strong id="freshnessValue">-</strong></p>
+          <p><span>Source</span><strong id="sourceValue">-</strong></p>
+          <p><span>Quality</span><strong id="qualityValue">-</strong></p>
+        </div>
+      </header>
+
+      <section class="controls card">
+        <div class="control-group">
+          <label for="monthSelect">월</label>
+          <select id="monthSelect"></select>
+        </div>
+        <div class="control-group">
+          <label for="metricSelect">지표</label>
+          <select id="metricSelect">
+            <option value="open">개업 Top 100</option>
+            <option value="close">폐업 Top 100</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="sidoSelect">지역(시/도)</label>
+          <select id="sidoSelect"></select>
+        </div>
+        <div class="control-group">
+          <label for="industrySelect">업종</label>
+          <select id="industrySelect"></select>
+        </div>
+        <div class="control-group control-search">
+          <label for="searchInput">브랜드 검색</label>
+          <input id="searchInput" type="search" placeholder="브랜드명을 입력하세요" />
+        </div>
+        <button id="csvButton" class="btn">CSV 다운로드</button>
+      </section>
+
+      <section class="content-grid">
+        <article class="card table-card">
+          <h2>랭킹 테이블</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Brand</th>
+                <th>Open</th>
+                <th>Close</th>
+                <th>Net</th>
+                <th>Latest Event</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+          <p id="emptyState" class="empty" hidden>조건에 맞는 데이터가 없습니다.</p>
+        </article>
+
+        <article class="card">
+          <h2>추이 스냅샷</h2>
+          <p class="trend-brand" id="trendBrand">브랜드를 선택하세요</p>
+          <ul id="trendList" class="trend-list"></ul>
+          <p class="hint">테이블의 브랜드명을 클릭하면 12개월 추이를 표시합니다.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="./web-test-data.js"></script>
+    <script src="./web-test-app.js"></script>
+  </body>
+</html>
