@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Data - Web Test</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Franchise Pulse Korea</p>
+          <h1>데이터 출처 및 기준</h1>
+          <p class="subtitle">PRD/FRD 기반 v1 웹 테스트 버전 안내</p>
+        </div>
+        <div class="status-panel">
+          <p><span>Page</span><strong>/about-data</strong></p>
+          <p><span>Mode</span><strong>web-test</strong></p>
+          <p><span><a href="/">대시보드로 돌아가기</a></span></p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>소스 우선순위</h2>
+        <ul>
+          <li>`data.go.kr` (기본 소스)</li>
+          <li>`KFTC` (브랜드/가맹 메타 보강)</li>
+          <li>`legacy/local backup` (전환기 보조)</li>
+        </ul>
+
+        <h2>지표 산정</h2>
+        <ul>
+          <li>월 버킷: `Asia/Seoul` 기준 `YYYY-MM`</li>
+          <li>순증: `net_change = open_count - close_count`</li>
+          <li>Top 100 정렬: count DESC -> latest_event_date DESC -> brand_name ASC</li>
+        </ul>
+
+        <h2>운영 기준</h2>
+        <ul>
+          <li>일 단위 갱신 성공률 95% 이상 목표</li>
+          <li>파이프라인 스케줄 성공률 99% 이상 목표</li>
+          <li>단일 소스 장애 시 마지막 정상 집계 유지(degraded)</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brand Trend - Web Test</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Franchise Pulse Korea</p>
+          <h1 id="brandTitle">브랜드 상세</h1>
+          <p class="subtitle">월별 개업/폐업/순증 추이</p>
+        </div>
+        <div class="status-panel">
+          <p><span>Page</span><strong>/brand/[brandId]</strong></p>
+          <p><span>Mode</span><strong>web-test</strong></p>
+          <p><span><a href="/">대시보드로 돌아가기</a></span></p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>브랜드 추이 데이터</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Open</th>
+              <th>Close</th>
+              <th>Net</th>
+            </tr>
+          </thead>
+          <tbody id="brandTrendBody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="./web-test-data.js"></script>
+    <script src="./web-test-brand.js"></script>
+  </body>
+</html>
