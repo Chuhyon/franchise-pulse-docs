@@ -35,6 +35,7 @@ The command deploys this static web test version directly from repository root.
 
 - `docs/PRD.md`: Core product requirements (concise, decision-focused)
 - `docs/FRD.md`: Functional requirements and implementation details
+- `docs/WORKLOG.md`: Implementation/deployment work summary for web-test rollout
 
 ## Scope split policy
 
