@@ -26,7 +26,7 @@ export async function GET(
   const brandId = pathParsed.data.brandId;
   const from = queryParsed.data.from;
   const to = queryParsed.data.to;
-  const items = repository.findBrandTrends(brandId, from, to);
+  const items = await repository.findBrandTrends(brandId, from, to);
 
   return NextResponse.json({ brandId, from, to, items }, {
     headers: {

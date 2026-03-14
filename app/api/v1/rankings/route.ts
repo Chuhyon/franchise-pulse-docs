@@ -22,8 +22,8 @@ export async function GET(request: Request) {
   }
 
   const input = parsed.data;
-  const rows = repository.findRankings(input);
-  const source = repository.getSourceMeta();
+  const rows = await repository.findRankings(input);
+  const source = await repository.getSourceMeta();
 
   const body = {
     month: input.month,

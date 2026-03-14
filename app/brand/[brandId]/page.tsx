@@ -9,8 +9,8 @@ export default async function BrandDetailPage({ params }: Props) {
   const repository = getFranchiseRepository();
   const resolved = await params;
   const brandId = Number.parseInt(resolved.brandId, 10);
-  const trends = Number.isNaN(brandId) ? [] : repository.findBrandTrends(brandId);
-  const brandName = Number.isNaN(brandId) ? "Unknown Brand" : repository.getBrandName(brandId);
+  const trends = Number.isNaN(brandId) ? [] : await repository.findBrandTrends(brandId);
+  const brandName = Number.isNaN(brandId) ? "Unknown Brand" : await repository.getBrandName(brandId);
 
   const values = trends.map((item) => item.netChange);
   const min = values.length ? Math.min(...values) : 0;

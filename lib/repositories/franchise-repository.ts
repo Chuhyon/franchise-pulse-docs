@@ -11,6 +11,7 @@ import {
   type SourceMeta,
   type TrendPoint
 } from "@/lib/domain";
+import { PostgresFranchiseRepository } from "@/lib/repositories/postgres-franchise-repository";
 
 export type RankingQuery = {
   month: string;
@@ -36,46 +37,46 @@ export type RebuildJob = {
 };
 
 export interface FranchiseRepository {
-  listMonths(): string[];
-  listSidos(): string[];
-  listIndustries(): string[];
-  getSourceMeta(): SourceMeta;
-  findRankings(query: RankingQuery): RankingItem[];
-  findBrandTrends(brandId: number, from?: string, to?: string): TrendPoint[];
-  getBrandName(brandId: number): string;
-  requestRebuild(input: RebuildRequest): RebuildJob;
+  listMonths(): Promise<string[]>;
+  listSidos(): Promise<string[]>;
+  listIndustries(): Promise<string[]>;
+  getSourceMeta(): Promise<SourceMeta>;
+  findRankings(query: RankingQuery): Promise<RankingItem[]>;
+  findBrandTrends(brandId: number, from?: string, to?: string): Promise<TrendPoint[]>;
+  getBrandName(brandId: number): Promise<string>;
+  requestRebuild(input: RebuildRequest): Promise<RebuildJob>;
 }
 
 class InMemoryFranchiseRepository implements FranchiseRepository {
-  listMonths(): string[] {
+  async listMonths(): Promise<string[]> {
     return getAvailableMonths();
   }
 
-  listSidos(): string[] {
+  async listSidos(): Promise<string[]> {
     return getSidoOptions();
   }
 
-  listIndustries(): string[] {
+  async listIndustries(): Promise<string[]> {
     return getIndustryOptions();
   }
 
-  getSourceMeta(): SourceMeta {
+  async getSourceMeta(): Promise<SourceMeta> {
     return getSourceMeta();
   }
 
-  findRankings(query: RankingQuery): RankingItem[] {
+  async findRankings(query: RankingQuery): Promise<RankingItem[]> {
     return queryRankings(query);
   }
 
-  findBrandTrends(brandId: number, from?: string, to?: string): TrendPoint[] {
+  async findBrandTrends(brandId: number, from?: string, to?: string): Promise<TrendPoint[]> {
     return getBrandTrends(brandId, from, to);
   }
 
-  getBrandName(brandId: number): string {
+  async getBrandName(brandId: number): Promise<string> {
     return findBrandName(brandId);
   }
 
-  requestRebuild(input: RebuildRequest): RebuildJob {
+  async requestRebuild(input: RebuildRequest): Promise<RebuildJob> {
     return {
       runId: `rebuild_${Date.now()}`,
       status: "queued",
@@ -87,7 +88,14 @@ class InMemoryFranchiseRepository implements FranchiseRepository {
 }
 
 const inMemoryRepository = new InMemoryFranchiseRepository();
+let postgresRepository: PostgresFranchiseRepository | null = null;
 
 export function getFranchiseRepository(): FranchiseRepository {
+  if (process.env.DATABASE_URL) {
+    if (!postgresRepository) {
+      postgresRepository = new PostgresFranchiseRepository(process.env.DATABASE_URL);
+    }
+    return postgresRepository;
+  }
   return inMemoryRepository;
 }

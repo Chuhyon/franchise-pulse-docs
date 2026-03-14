@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return apiError(parsedBody.error.issues[0]?.message ?? "Invalid request body", "VALIDATION_ERROR", 400);
   }
 
-  const job = repository.requestRebuild(parsedBody.data);
+  const job = await repository.requestRebuild(parsedBody.data);
 
   return NextResponse.json(
     job,

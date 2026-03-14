@@ -4,13 +4,17 @@ import { getFranchiseRepository } from "@/lib/repositories/franchise-repository"
 const repository = getFranchiseRepository();
 
 export async function GET() {
-  const source = await repository.getSourceMeta();
+  const [months, sidos, industries] = await Promise.all([
+    repository.listMonths(),
+    repository.listSidos(),
+    repository.listIndustries()
+  ]);
+
   return NextResponse.json(
     {
-      sourceSystem: source.source,
-      quality: source.quality,
-      lastSuccessfulSyncAt: source.generatedAt,
-      dataDelay: "PT0M"
+      months,
+      sidos,
+      industries
     },
     {
       headers: {
