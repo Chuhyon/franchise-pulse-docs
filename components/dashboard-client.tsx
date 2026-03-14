@@ -1,41 +1,112 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Metric } from "@/lib/domain";
-import { getFranchiseRepository } from "@/lib/repositories/franchise-repository";
+
+type SourceMeta = {
+  sourceSystem: string;
+  quality: "healthy" | "degraded";
+  lastSuccessfulSyncAt: string;
+};
+
+type RankingRow = {
+  rank: number;
+  brandId: number;
+  brandName: string;
+  openCount: number;
+  closeCount: number;
+  netChange: number;
+  latestEventDate: string;
+};
+
+type OptionsResponse = {
+  months: string[];
+  sidos: string[];
+  industries: string[];
+};
 
 export function DashboardClient() {
-  const repository = getFranchiseRepository();
-  const months = repository.listMonths();
-  const sidos = repository.listSidos();
-  const industries = repository.listIndustries();
-  const source = repository.getSourceMeta();
+  const [months, setMonths] = useState<string[]>([]);
+  const [sidos, setSidos] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [source, setSource] = useState<SourceMeta | null>(null);
+  const [rows, setRows] = useState<RankingRow[]>([]);
 
-  const [month, setMonth] = useState<string>(months[0] ?? "");
+  const [month, setMonth] = useState<string>("");
   const [metric, setMetric] = useState<Metric>("open");
   const [sido, setSido] = useState<string>("");
   const [industryMajor, setIndustryMajor] = useState<string>("");
   const [query, setQuery] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorText, setErrorText] = useState<string>("");
 
-  const rows = useMemo(
-    () =>
-      repository.findRankings({
-        month,
-        metric,
-        sido: sido || undefined,
-        industryMajor: industryMajor || undefined,
-        q: query || undefined
-      }),
-    [repository, month, metric, sido, industryMajor, query]
-  );
+  useEffect(() => {
+    async function loadInitialData() {
+      const [optionsRes, sourceRes] = await Promise.all([
+        fetch("/api/v1/meta/options", { cache: "no-store" }),
+        fetch("/api/v1/meta/sources", { cache: "no-store" })
+      ]);
 
-  const topBrand = rows[0];
+      if (!optionsRes.ok || !sourceRes.ok) {
+        setErrorText("초기 메타데이터를 불러오지 못했다.");
+        return;
+      }
+
+      const optionsJson = (await optionsRes.json()) as OptionsResponse;
+      const sourceJson = (await sourceRes.json()) as SourceMeta;
+
+      setMonths(optionsJson.months);
+      setSidos(optionsJson.sidos);
+      setIndustries(optionsJson.industries);
+      setSource(sourceJson);
+      setMonth((current) => current || optionsJson.months[0] || "");
+    }
+
+    void loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    async function loadRankings() {
+      if (!month) {
+        return;
+      }
+
+      setLoading(true);
+      setErrorText("");
+      const search = new URLSearchParams({ month, metric });
+      if (sido) {
+        search.set("sido", sido);
+      }
+      if (industryMajor) {
+        search.set("industryMajor", industryMajor);
+      }
+      if (query.trim()) {
+        search.set("q", query.trim());
+      }
+
+      const response = await fetch(`/api/v1/rankings?${search.toString()}`, { cache: "no-store" });
+      if (!response.ok) {
+        setErrorText("랭킹 데이터를 불러오지 못했다.");
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+
+      const json = (await response.json()) as { items: RankingRow[] };
+      setRows(json.items);
+      setLoading(false);
+    }
+
+    void loadRankings();
+  }, [month, metric, sido, industryMajor, query]);
+
+  const topBrand = useMemo(() => rows[0], [rows]);
 
   function downloadCsv() {
     const header = ["rank", "brandName", "openCount", "closeCount", "netChange", "latestEventDate"];
-    const lines = rows.map((item, index) =>
-      [index + 1, item.brandName, item.openCount, item.closeCount, item.netChange, item.latestEventDate].join(",")
+    const lines = rows.map((item) =>
+      [item.rank, item.brandName, item.openCount, item.closeCount, item.netChange, item.latestEventDate].join(",")
     );
     const csv = [header.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -57,18 +128,18 @@ export function DashboardClient() {
             </p>
             <h1 style={{ margin: "8px 0" }}>월별 개업/폐업 Top 100</h1>
             <p className="muted" style={{ margin: 0 }}>
-              개발 베이스 v0: 문서 스펙을 UI + API 구조로 연결한 구현 시작점
+              API 연동형 대시보드 개발 베이스
             </p>
           </div>
           <div>
             <p className="muted" style={{ margin: "4px 0" }}>
-              Freshness: {source.generatedAt}
+              Freshness: {source?.lastSuccessfulSyncAt ?? "-"}
             </p>
             <p className="muted" style={{ margin: "4px 0" }}>
-              Source: {source.source}
+              Source: {source?.sourceSystem ?? "-"}
             </p>
             <p className="muted" style={{ margin: "4px 0" }}>
-              Quality: {source.quality}
+              Quality: {source?.quality ?? "-"}
             </p>
           </div>
         </div>
@@ -113,7 +184,7 @@ export function DashboardClient() {
             onChange={(event) => setQuery(event.target.value)}
           />
 
-          <button type="button" onClick={downloadCsv}>
+          <button type="button" onClick={downloadCsv} disabled={rows.length === 0}>
             CSV 다운로드
           </button>
 
@@ -125,6 +196,8 @@ export function DashboardClient() {
 
       <section className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ marginTop: 0 }}>랭킹 테이블</h2>
+        {loading ? <p className="muted">불러오는 중...</p> : null}
+        {errorText ? <p className="muted">{errorText}</p> : null}
         <table>
           <thead>
             <tr>
@@ -142,9 +215,9 @@ export function DashboardClient() {
                 <td colSpan={6}>조건에 맞는 데이터가 없습니다.</td>
               </tr>
             ) : (
-              rows.map((item, index) => (
-                <tr key={`${item.brandId}-${index}`}>
-                  <td>{index + 1}</td>
+              rows.map((item) => (
+                <tr key={`${item.brandId}-${item.rank}`}>
+                  <td>{item.rank}</td>
                   <td>
                     <Link href={`/brand/${item.brandId}`}>{item.brandName}</Link>
                   </td>
