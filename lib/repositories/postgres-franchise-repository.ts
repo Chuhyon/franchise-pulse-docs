@@ -25,6 +25,20 @@ export class PostgresFranchiseRepository implements FranchiseRepository {
     this.pool = getPool(connectionString);
   }
 
+  public getBackendName(): "postgres" {
+    return "postgres";
+  }
+
+  public async checkHealth(): Promise<{ ok: boolean; message: string }> {
+    try {
+      await this.pool.query("select 1");
+      return { ok: true, message: "postgres connection is healthy" };
+    } catch (error) {
+      console.error("postgres health check failed", error);
+      return { ok: false, message: "postgres connection failed" };
+    }
+  }
+
   public async listMonths(): Promise<string[]> {
     try {
       const result = await this.pool.query<{ month: string }>(

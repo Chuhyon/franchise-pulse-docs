@@ -37,6 +37,8 @@ export type RebuildJob = {
 };
 
 export interface FranchiseRepository {
+  getBackendName(): "postgres" | "in-memory";
+  checkHealth(): Promise<{ ok: boolean; message: string }>;
   listMonths(): Promise<string[]>;
   listSidos(): Promise<string[]>;
   listIndustries(): Promise<string[]>;
@@ -48,8 +50,16 @@ export interface FranchiseRepository {
 }
 
 class InMemoryFranchiseRepository implements FranchiseRepository {
+  getBackendName(): "in-memory" {
+    return "in-memory";
+  }
+
   async listMonths(): Promise<string[]> {
     return getAvailableMonths();
+  }
+
+  async checkHealth(): Promise<{ ok: boolean; message: string }> {
+    return { ok: true, message: "in-memory repository is active" };
   }
 
   async listSidos(): Promise<string[]> {

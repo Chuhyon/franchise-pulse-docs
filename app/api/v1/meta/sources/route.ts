@@ -4,13 +4,19 @@ import { getFranchiseRepository } from "@/lib/repositories/franchise-repository"
 const repository = getFranchiseRepository();
 
 export async function GET() {
-  const source = await repository.getSourceMeta();
+  const [source, health] = await Promise.all([
+    repository.getSourceMeta(),
+    repository.checkHealth()
+  ]);
+
   return NextResponse.json(
     {
       sourceSystem: source.source,
       quality: source.quality,
       lastSuccessfulSyncAt: source.generatedAt,
-      dataDelay: "PT0M"
+      dataDelay: "PT0M",
+      dataBackend: repository.getBackendName(),
+      backendHealth: health
     },
     {
       headers: {

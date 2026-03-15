@@ -8,6 +8,11 @@ type SourceMeta = {
   sourceSystem: string;
   quality: "healthy" | "degraded";
   lastSuccessfulSyncAt: string;
+  dataBackend: "postgres" | "in-memory";
+  backendHealth: {
+    ok: boolean;
+    message: string;
+  };
 };
 
 type RankingRow = {
@@ -140,6 +145,12 @@ export function DashboardClient() {
             </p>
             <p className="muted" style={{ margin: "4px 0" }}>
               Quality: {source?.quality ?? "-"}
+            </p>
+            <p className="muted" style={{ margin: "4px 0" }}>
+              Backend: {source?.dataBackend ?? "-"}
+            </p>
+            <p className="muted" style={{ margin: "4px 0" }}>
+              Health: {source?.backendHealth.ok ? "ok" : "error"}
             </p>
           </div>
         </div>
