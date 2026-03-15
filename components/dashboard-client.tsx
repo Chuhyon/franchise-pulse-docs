@@ -8,7 +8,7 @@ type SourceMeta = {
   sourceSystem: string;
   quality: "healthy" | "degraded";
   lastSuccessfulSyncAt: string;
-  dataBackend: "postgres" | "in-memory";
+  dataBackend: "postgres" | "supabase" | "in-memory";
   backendHealth: {
     ok: boolean;
     message: string;

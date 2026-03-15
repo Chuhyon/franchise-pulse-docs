@@ -12,6 +12,7 @@ import {
   type TrendPoint
 } from "@/lib/domain";
 import { PostgresFranchiseRepository } from "@/lib/repositories/postgres-franchise-repository";
+import { SupabaseFranchiseRepository } from "@/lib/repositories/supabase-franchise-repository";
 
 export type RankingQuery = {
   month: string;
@@ -37,7 +38,7 @@ export type RebuildJob = {
 };
 
 export interface FranchiseRepository {
-  getBackendName(): "postgres" | "in-memory";
+  getBackendName(): "postgres" | "supabase" | "in-memory";
   checkHealth(): Promise<{ ok: boolean; message: string }>;
   listMonths(): Promise<string[]>;
   listSidos(): Promise<string[]>;
@@ -99,6 +100,7 @@ class InMemoryFranchiseRepository implements FranchiseRepository {
 
 const inMemoryRepository = new InMemoryFranchiseRepository();
 let postgresRepository: PostgresFranchiseRepository | null = null;
+let supabaseRepository: SupabaseFranchiseRepository | null = null;
 
 export function getFranchiseRepository(): FranchiseRepository {
   if (process.env.DATABASE_URL) {
@@ -107,5 +109,16 @@ export function getFranchiseRepository(): FranchiseRepository {
     }
     return postgresRepository;
   }
+
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!supabaseRepository) {
+      supabaseRepository = new SupabaseFranchiseRepository(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+    }
+    return supabaseRepository;
+  }
+
   return inMemoryRepository;
 }
